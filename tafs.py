@@ -5,11 +5,9 @@ TAF Programme designed to return a graphical interpretation
        Create Class for each change group
 '''
 
-EXAMPLE = '''EGXE 161400Z 1615/1702 22015KT 9999 FEW020 SCT025
-TEMPO 1622/1702 24022G32KT SCT020
-BECMG 1615/1619 5000 -RA 30010KT'''
+EXAMPLE = '''EGXE 161400Z 1615/1702 22015KT 9999 FEW020 SCT025 TEMPO 1622/1702 24022G32KT SCT020 BECMG 1615/1619 5000 -RA 30010KT'''
 SPLITS = ['BECMG', 'TEMPO', 'PROB40', 'PROB30']
-
+ALLOWED_WX = ['-RA']
 
 def get_taf_as_dict(taf):
     '''
@@ -73,11 +71,30 @@ class TafGroup():
             clouds = self.get_cloud_group_dict(clouds)
             return clouds
 
+    def vis_colour(self, vis):
+        if vis > 7999:
+            vis_colour = {'colour': 'BLU', 'hex':'#0000EE'}
+        elif vis > 4999:
+            vis_colour = {'colour': 'WHT', 'hex':'#EEEEEE'}
+        elif vis > 3699:
+            vis_colour = {'colour': 'GRN', 'hex':'#00EE00'}
+        elif vis > 2499:
+            vis_colour = {'colour': 'YLO1', 'hex':'#00EEEE'}
+        elif vis > 1599:
+            vis_colour = {'colour': 'YLO2', 'hex':'#00AAAA'}
+        elif vis > 799:
+            vis_colour = {'colour': 'AMB', 'hex':'#CC8888'}
+        elif vis < 800:
+            vis_colour = {'colour': 'RED', 'hex':'#EE0000'}
+        else:
+            vis_colour = {'colour': 'ERR', 'hex':'#000000'}
+        return vis_colour
+
     def pull_apart(self, group):
         '''
         takes taf data and turns it into a dict.
         '''
-        out = {'clouds': [], 'wx': [], 'duration': 0}
+        out = {'clouds': [], 'wx': [], 'duration': 0, 'vis':None, 'vis_colour':{'colour': 'NIL', 'hex': '#00000000'}}
         clouds = []
         for word in group:
             if '/' in word:
@@ -93,16 +110,27 @@ class TafGroup():
                 out['change_type'] = word
             elif len(word) == 4 and isinstance(int(word), int):
                 out['vis'] = int(word)
+                out['vis_colour'] = self.vis_colour(int(word))
             elif word[-2:] == "KT":
                 out['wind'] = word
                 out['max_wind'] = word[-4:-2]
             elif len(word) == 6:
                 clouds.append(word)
-            else:
+            elif word in ALLOWED_WX:
                 out['wx'].append(word)
         out['clouds'] = self.cloud_analysis(clouds)
         return out
 
+    def html_pretties(self):
+        data = self.start
+        length = int(data['duration'])
+        hour = 0        
+        html = "<tr>"        
+        while hour < length:
+            html += u"<td bgcolor=" + data['vis_colour']['hex'] + ">" + str(data['vis']) + u"</td>"
+            hour += 1
+        html += "</tr>"
+        return html
 
 def main():
     '''
@@ -112,10 +140,11 @@ def main():
     for key, _ in eg_taf.iteritems():
         if key != 0:
             eg_class = TafGroup(get_taf_as_dict(EXAMPLE)[key])
-            print eg_class
+            print eg_class.html_pretties()
         else:
             eg_class = TafGroup(get_taf_as_dict(EXAMPLE)[key][2:], is_base=True)
-            print eg_class
-
+            print eg_class.html_pretties()
+                     
+    
 if __name__ == "__main__":
     main()
