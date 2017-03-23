@@ -9,13 +9,22 @@ EXAMPLE = '''EGXE 161400Z 1615/1702 22015KT 9999 FEW020 SCT025 TEMPO 1622/1702 2
 SPLITS = ['BECMG', 'TEMPO', 'PROB40', 'PROB30']
 ALLOWED_WX = ['-RA']
 
+
+def taf_datetime_difference(a, b):
+    '''
+    calculates a difference in hours between two taf
+    datetimes
+    '''
+    import datetime as dt
+    dt.datetime.strptime(a, '%D')
+
+
 def get_taf_as_dict(taf):
     '''
     Function to return a dictionary each item of which is a change group
     item 0 will always be the base conditions
     item zero in each key will always be the change group
     '''
-
     taf = taf.split(' ')
     taf_dict_key = 0
     taf_dict = {0: []}
@@ -25,6 +34,7 @@ def get_taf_as_dict(taf):
             taf_dict[taf_dict_key] = [word_from_taf]
         else:
             taf_dict[taf_dict_key] = taf_dict[taf_dict_key] + [word_from_taf]
+    taf_dict['base_time'] = taf_dict[0][2][:4]
     return taf_dict
 
 
@@ -137,13 +147,7 @@ def main():
     blah
     '''
     eg_taf = get_taf_as_dict(EXAMPLE)
-    for key, _ in eg_taf.iteritems():
-        if key != 0:
-            eg_class = TafGroup(get_taf_as_dict(EXAMPLE)[key])
-            print eg_class.html_pretties()
-        else:
-            eg_class = TafGroup(get_taf_as_dict(EXAMPLE)[key][2:], is_base=True)
-            print eg_class.html_pretties()
+    print eg_taf
                      
     
 if __name__ == "__main__":
