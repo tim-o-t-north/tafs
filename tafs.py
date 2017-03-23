@@ -16,7 +16,13 @@ def taf_datetime_difference(a, b):
     datetimes
     '''
     import datetime as dt
-    dt.datetime.strptime(a, '%D')
+    year_month = dt.datetime.utcnow().strftime('%Y%m')
+    y = []    
+    dtstr = "{}{}".format(year_month, str(a))
+    a = dt.datetime.strptime(dtstr, '%Y%m%d%H')
+    dtstr = "{}{}".format(year_month, str(b))
+    b = dt.datetime.strptime(dtstr, '%Y%m%d%H')
+    return (b - a).seconds / 3600
 
 
 def get_taf_as_dict(taf):
@@ -148,6 +154,9 @@ def main():
     '''
     eg_taf = get_taf_as_dict(EXAMPLE)
     print eg_taf
+    a = 1515
+    b = 1603
+    print taf_datetime_difference(a, b)
                      
     
 if __name__ == "__main__":
